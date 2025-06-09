@@ -1,103 +1,119 @@
-import Image from "next/image";
+'use client';
+
+import { useState } from 'react';
+import TodoItem from '@/components/TodoItem';
+import FilterButtons from '@/components/FilterButtons';
+import AddTodoPopup from '@/components/AddTodoPopup';
+import { useTodos } from '@/hooks/useTodos';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [showPopup, setShowPopup] = useState(false);
+  const {
+    todos,
+    stats,
+    isLoading,
+    isSubmitting,
+    error,
+    filter,
+    setFilter,
+    addTodo,
+    toggleTodo,
+    editTodo,
+    deleteTodo,
+    clearCompleted,
+  } = useTodos();
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  return (
+    <div className="relative min-h-screen pb-20">
+      <h1 className="text-2xl font-medium text-center mb-8 text-gray-900">
+        Todo
+      </h1>
+      <div className="bg-white rounded-xl">
+        {error && (
+          <div className="p-4 text-sm text-red-500 bg-red-50 border-b border-red-100">
+            {error}
+          </div>
+        )}
+
+        {!isLoading && todos.length > 0 && (
+          <div className="p-4 border-b border-gray-100">
+            <div className="flex justify-between items-center mb-4">
+              <div className="text-sm text-gray-500">
+                {stats.active} items left
+              </div>
+              <FilterButtons currentFilter={filter} onFilterChange={setFilter} />
+            </div>
+          </div>
+        )}
+
+        <div className="divide-y divide-gray-100">
+          {isLoading ? (
+            <p className="py-8 text-center text-sm text-gray-700">Loading todos...</p>
+          ) : todos.length === 0 ? (
+            <p className="py-8 text-center text-sm text-gray-700">
+              {stats.total === 0
+                ? 'No todos yet. Add one above!'
+                : 'No todos match the current filter'}
+            </p>
+          ) : (
+            <>
+              {todos.map((todo) => (
+                <TodoItem
+                  key={todo._id}
+                  id={todo._id}
+                  text={todo.text}
+                  completed={todo.completed}
+                  onToggle={toggleTodo}
+                  onDelete={deleteTodo}
+                  onEdit={editTodo}
+                />
+              ))}
+              {stats.completed > 0 && (
+                <div className="p-4 flex justify-between items-center text-sm text-gray-500">
+                  <span>{stats.completed} completed</span>
+                  <button
+                    onClick={clearCompleted}
+                    className="text-blue-500 hover:text-blue-600 focus:outline-none"
+                  >
+                    Clear completed
+                  </button>
+                </div>
+              )}
+            </>
+          )}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+      </div>
+
+      {/* Floating Action Button */}
+      <button
+        onClick={() => setShowPopup(true)}
+        className="fixed bottom-6 right-6 w-14 h-14 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center justify-center transition-transform hover:scale-105"
+        aria-label="Add new todo"
+      >
+        <svg
+          className="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 4v16m8-8H4"
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        </svg>
+      </button>
+
+      {/* Add Todo Popup */}
+      {showPopup && (
+        <AddTodoPopup
+          onSubmit={addTodo}
+          isSubmitting={isSubmitting}
+          onClose={() => setShowPopup(false)}
+        />
+      )}
     </div>
   );
 }
